@@ -1,5 +1,5 @@
 import {sqliteTable, text, integer} from 'drizzle-orm/sqlite-core'
-import { text } from "body-parser";
+import { v4 as uuidv4 } from 'uuid';
 
 export const userTable = sqliteTable('users', {
     idUser: text().primaryKey().$defaultFn( () => uuidv4()),
