@@ -45,7 +45,7 @@ export const createCollection = async (req, res) => {
         const collectionData = {
             title,
             description: description || "",
-            isPrivate: isPrivate !== undefined ? isPrivate : false,
+            isPrivate: isPrivate,
             idUser: idUser
         };
         

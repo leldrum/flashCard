@@ -8,7 +8,7 @@ const router = Router()
 router.get('/:title', getPublicCollections)
 
 router.get('/:id', getCollection)
-router.get('/user', getPrivateCollections)
+router.get('/:', getPrivateCollections)
 
 router.post('/', validateBody(createCollectionSchema), createCollection)
 router.put('/:id', updateCollection)
