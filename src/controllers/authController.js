@@ -2,12 +2,12 @@ import bcrypt from 'bcrypt'
 import { db } from '../db/index.js'
 import { usersTable } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
-import { generateToken } from '../utils/jwt.js'
+import jwt from 'jsonwebtoken'
 import { randomUUID } from 'crypto'
 
 export const register = async (req, res) => {
   try {
-    const { firstName, lastName, email, password } = req.body
+    const { username, email, password } = req.body
 
     // Vérifier si l'email existe déjà
     const existingUser = await db
@@ -21,7 +21,7 @@ export const register = async (req, res) => {
     }
 
     // Hasher le mot de passe
-    const hashedPassword = await bcrypt.hash(password, 10)
+    const hashedPassword = await bcrypt.hash(password, 12)
 
     // Créer l'utilisateur
     const userId = randomUUID()
@@ -29,11 +29,10 @@ export const register = async (req, res) => {
       .insert(usersTable)
       .values({
         id: userId,
-        firstName,
-        lastName,
+        username,
         email,
         password: hashedPassword,
-        isAdmin: false
+        role: 'user'
       })
       .returning()
 
@@ -42,17 +41,20 @@ export const register = async (req, res) => {
     }
 
     // Générer le token
-    const token = generateToken(userId, false)
+    const token = jwt.sign(
+      { userId: newUser[0].id },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    )
 
     res.status(201).json({
       message: 'Utilisateur créé avec succès',
-      token,
       user: {
         id: newUser[0].id,
-        firstName: newUser[0].firstName,
-        lastName: newUser[0].lastName,
+        username: newUser[0].username,
         email: newUser[0].email
-      }
+      },
+      token
     })
   } catch (error) {
     console.error('Erreur register:', error)
@@ -83,18 +85,20 @@ export const login = async (req, res) => {
     }
 
     // Générer le token
-    const token = generateToken(user[0].id, user[0].isAdmin)
+    const token = jwt.sign(
+      { userId: user[0].id },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    )
 
     res.json({
       message: 'Connexion réussie',
-      token,
-      user: {
+      userData: {
         id: user[0].id,
-        firstName: user[0].firstName,
-        lastName: user[0].lastName,
-        email: user[0].email,
-        isAdmin: user[0].isAdmin
-      }
+        username: user[0].username,
+        email: user[0].email
+      },
+      token
     })
   } catch (error) {
     console.error('Erreur login:', error)
@@ -104,7 +108,7 @@ export const login = async (req, res) => {
 
 export const getProfile = async (req, res) => {
   try {
-    const userId = req.userId
+    const userId = req.user.userId
 
     const user = await db
       .select()
@@ -119,10 +123,9 @@ export const getProfile = async (req, res) => {
     res.json({
       user: {
         id: user[0].id,
-        firstName: user[0].firstName,
-        lastName: user[0].lastName,
+        username: user[0].username,
         email: user[0].email,
-        isAdmin: user[0].isAdmin,
+        role: user[0].role,
         createdAt: user[0].createdAt
       }
     })

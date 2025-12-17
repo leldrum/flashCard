@@ -4,11 +4,10 @@ import { relations } from 'drizzle-orm'
 // Users Table
 export const usersTable = sqliteTable('users', {
   id: text().primaryKey(),
-  firstName: text({ length: 50 }).notNull(),
-  lastName: text({ length: 50 }).notNull(),
+  username: text({ length: 30 }).notNull(),
   email: text().notNull().unique(),
   password: text().notNull(),
-  isAdmin: integer({ mode: 'boolean' }).default(false).notNull(),
+  role: text({ enum: ['user', 'admin'] }).notNull().default('user'),
   createdAt: integer({ mode: 'timestamp' })
     .$defaultFn(() => new Date())
     .notNull(),

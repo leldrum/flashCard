@@ -15,10 +15,10 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@libsql/client": "^0.5.6",
+    "@libsql/client": "^0.15.15",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.3.1",
-    "drizzle-orm": "^0.32.1",
+    "drizzle-orm": "^0.45.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.2",
     "nodemon": "^3.1.11",
@@ -26,6 +26,6 @@
   },
   "devDependencies": {
     "better-sqlite3": "^12.5.0",
-    "drizzle-kit": "^0.20.14"
+    "drizzle-kit": "^0.31.8"
   }
 }
