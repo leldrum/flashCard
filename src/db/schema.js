@@ -7,7 +7,7 @@ export const userTable = sqliteTable('users', {
     name : text({length:30}).notNull(),
     email: text().notNull().unique(),
     password: text({length:255}).notNull(),
-    isAdmin: integer({mode: 'boolean'}).notNull(),
+    isAdmin: integer({mode: 'boolean'}).default(false).notNull(),
     createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
 
@@ -26,15 +26,15 @@ export const cardTable = sqliteTable('cards', {
     backText : text({length:255}).notNull(),
     frontUrl : text({length:255}),
     backUrl : text({length:255}),
-    idCollection: integer("idCollection").references(() => collectionTable.idCollection).notNull(),
+    idCollection: text("idCollection").references(() => collectionTable.idCollection).notNull(),
     createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
 
 export const revisionTable = sqliteTable('revisions', {
     idRevision: text().primaryKey().$defaultFn( () => uuidv4()),
-    idCard : integer("idCard").references(() => cardTable.idCard).notNull(),
-    idLevel: integer("idLevel").references(() => levelTable.idLevel).notNull(),
-    idUser: integer("idUser").references(() => userTable.idUser).notNull(),
+    idCard : text("idCard").references(() => cardTable.idCard).notNull(),
+    idLevel: text("idLevel").references(() => levelTable.idLevel).notNull(),
+    idUser: text("idUser").references(() => userTable.idUser).notNull(),
     lastRevision: integer('lastRevision', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
     createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
