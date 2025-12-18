@@ -1,5 +1,5 @@
-import {sqliteTable, text, integer} from 'drizzle-orm/sqlite-core'
-import { text } from "body-parser";
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+import { relations } from 'drizzle-orm'
 
 export const userTable = sqliteTable('users', {
     idUser: text().primaryKey().$defaultFn( () => uuidv4()),
@@ -47,3 +47,5 @@ export const levelTable = sqliteTable('levels', {
     idUser: integer("idUser").references(() => userTable.idUser).notNull(),
     createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
+
+
