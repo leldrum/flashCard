@@ -6,9 +6,10 @@ async function seed() {
     try {
         console.log('Seeding database..');
 
-        await db.delete(cardTable);
-        await db.delete(collectionTable);
         await db.delete(userTable);
+        await db.delete(collectionTable);
+        await db.delete(cardTable);
+      
 
         const mdpHash1 = await bcrypt.hash('Password123!', 12);
         const mdpHash2 = await bcrypt.hash('Password123!', 12);

@@ -1,7 +1,6 @@
-import { eq, desc } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { db } from "../db/db.js"
 import { cardTable, collectionTable } from '../db/schema.js'
-import {request, response} from 'express'
 
 export const createCard = async (req, res) => {
     try {
@@ -18,10 +17,10 @@ export const createCard = async (req, res) => {
         }
 
         const idCollect = await db
-                .select(collectionTable.idCollection)
+                .select( {idCollection: collectionTable.idCollection})
                 .from(collectionTable)
                 .where(eq(collectionTable.title, titleCollection))
-                .limit(1);
+
         
         if (idCollect.length === 0) {
             return res.status(404).json({ error: "Collection not found" });
@@ -34,7 +33,6 @@ export const createCard = async (req, res) => {
             backUrl: backUrl || null,
             idCollection: idCollect[0].idCollection
         };
-        
         const result = await db.insert(cardTable).values(cardData).returning();
         res.status(201).json(result[0]);
     } catch (error) {
