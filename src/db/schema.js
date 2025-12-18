@@ -17,7 +17,7 @@ export const collectionTable = sqliteTable('collections', {
     title : text({length:255}).notNull(),
     description : text({length:255}).notNull(),
     isPrivate: integer({mode: 'boolean'}).notNull(),
-    idUser: integer("idUser").references(() => userTable.idUser).notNull(),
+    idUser: text("idUser").references(() => userTable.idUser).notNull(),
     createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
 
@@ -45,7 +45,7 @@ export const levelTable = sqliteTable('levels', {
     title : text({length:255}).notNull(),
     description : text({length:255}).notNull(),
     isPrivate: integer({mode: 'boolean'}).notNull(),
-    idUser: integer("idUser").references(() => userTable.idUser).notNull(),
+    idUser: text("idUser").references(() => userTable.idUser).notNull(),
     createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
 

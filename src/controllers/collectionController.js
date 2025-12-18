@@ -4,6 +4,7 @@ import { db } from "../db/db.js"
 import { collectionTable } from '../db/schema.js'
 import {request, response} from 'express'
 
+//A optimiser avec une recherche en base de donnée plutot que de tout ramener et filtrer apres
 export const getPublicCollections = async (req, res) => {
    try {
      const { title } = req.params;
