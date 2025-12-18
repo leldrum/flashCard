@@ -5,12 +5,12 @@ import authRoutes from './routes/auth.js'
 
 dotenv.config()
 import path from 'path';
+import collectionRoutes from './router/collectionRouter.js'
 
 
 const PORT = process.env.PORT || 3000
 const app = express()
 
-// Middlewares
 app.use(express.json())
 
 // Routes
@@ -26,10 +26,11 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Route non trouvée' })
 })
 
-
 app.get('/', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'src/public', 'index.html'));
 });
+
+app.use('/collections', collectionRoutes)
 
 app.listen(PORT, () => {
   console.log(`Serveur lancé sur http://localhost:${PORT}`)
