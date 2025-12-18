@@ -1,6 +1,7 @@
 import {sqliteTable, text, integer} from 'drizzle-orm/sqlite-core'
 import { v4 as uuidv4 } from 'uuid';
 
+
 export const userTable = sqliteTable('users', {
     idUser: text().primaryKey().$defaultFn( () => uuidv4()),
     firstName : text({length:30}).notNull(),
@@ -47,3 +48,5 @@ export const levelTable = sqliteTable('levels', {
     idUser: integer("idUser").references(() => userTable.idUser).notNull(),
     createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
+
+
