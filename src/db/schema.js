@@ -1,118 +1,51 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
 import { relations } from 'drizzle-orm'
 
-// Users Table
-export const usersTable = sqliteTable('users', {
-  id: text().primaryKey(),
-  username: text({ length: 30 }).notNull(),
-  email: text().notNull().unique(),
-  password: text().notNull(),
-  role: text({ enum: ['user', 'admin'] }).notNull().default('user'),
-  createdAt: integer({ mode: 'timestamp' })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer({ mode: 'timestamp' })
-    .$defaultFn(() => new Date())
-    .notNull()
+export const userTable = sqliteTable('users', {
+    idUser: text().primaryKey().$defaultFn( () => uuidv4()),
+    firstName : text({length:30}).notNull(),
+    name : text({length:30}).notNull(),
+    email: text().notNull().unique(),
+    password: text({length:255}).notNull(),
+    isAdmin: integer({mode: 'boolean'}).notNull(),
+    createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
 
-// Collections Table
-export const collectionsTable = sqliteTable('collections', {
-  id: text().primaryKey(),
-  userId: text()
-    .notNull()
-    .references(() => usersTable.id, { onDelete: 'cascade' }),
-  title: text({ length: 255 }).notNull(),
-  description: text(),
-  isPublic: integer({ mode: 'boolean' }).default(false).notNull(),
-  createdAt: integer({ mode: 'timestamp' })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer({ mode: 'timestamp' })
-    .$defaultFn(() => new Date())
-    .notNull()
+export const collectionTable = sqliteTable('collections', {
+    idCollection: text().primaryKey().$defaultFn( () => uuidv4()),
+    title : text({length:255}).notNull(),
+    description : text({length:255}).notNull(),
+    isPrivate: integer({mode: 'boolean'}).notNull(),
+    idUser: integer("idUser").references(() => userTable.idUser).notNull(),
+    createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
 
-// Flashcards Table
-export const flashcardsTable = sqliteTable('flashcards', {
-  id: text().primaryKey(),
-  collectionId: text()
-    .notNull()
-    .references(() => collectionsTable.id, { onDelete: 'cascade' }),
-  front: text().notNull(),
-  back: text().notNull(),
-  frontUrl: text(),
-  backUrl: text(),
-  level: integer().default(1).notNull(),
-  lastReviewedAt: integer({ mode: 'timestamp' }),
-  nextReviewAt: integer({ mode: 'timestamp' })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  createdAt: integer({ mode: 'timestamp' })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: integer({ mode: 'timestamp' })
-    .$defaultFn(() => new Date())
-    .notNull()
+export const cardTable = sqliteTable('cards', {
+    idCard: text().primaryKey().$defaultFn( () => uuidv4()),
+    frontText : text({length:255}).notNull(),
+    backText : text({length:255}).notNull(),
+    frontUrl : text({length:255}),
+    backUrl : text({length:255}),
+    idCollection: integer("idCollection").references(() => collectionTable.idCollection).notNull(),
+    createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
 
-// User Progress Table (for public collections)
-export const userProgressTable = sqliteTable('user_progress', {
-  id: text().primaryKey(),
-  userId: text()
-    .notNull()
-    .references(() => usersTable.id, { onDelete: 'cascade' }),
-  flashcardId: text()
-    .notNull()
-    .references(() => flashcardsTable.id, { onDelete: 'cascade' }),
-  level: integer().default(1).notNull(),
-  lastReviewedAt: integer({ mode: 'timestamp' }),
-  nextReviewAt: integer({ mode: 'timestamp' })
-    .$defaultFn(() => new Date())
-    .notNull(),
-  createdAt: integer({ mode: 'timestamp' })
-    .$defaultFn(() => new Date())
-    .notNull()
+export const revisionTable = sqliteTable('revisions', {
+    idRevision: text().primaryKey().$defaultFn( () => uuidv4()),
+    idCard : integer("idCard").references(() => cardTable.idCard).notNull(),
+    idLevel: integer("idLevel").references(() => levelTable.idLevel).notNull(),
+    idUser: integer("idUser").references(() => userTable.idUser).notNull(),
+    lastRevision: integer('lastRevision', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
+    createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
 
-// Relations
-export const usersRelations = relations(usersTable, ({ many }) => ({
-  collections: many(collectionsTable),
-  progress: many(userProgressTable)
-}))
+export const levelTable = sqliteTable('levels', {
+    idLevel : text().primaryKey().$defaultFn( () => uuidv4()),
+    title : text({length:255}).notNull(),
+    description : text({length:255}).notNull(),
+    isPrivate: integer({mode: 'boolean'}).notNull(),
+    idUser: integer("idUser").references(() => userTable.idUser).notNull(),
+    createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
+})
 
-export const collectionsRelations = relations(
-  collectionsTable,
-  ({ one, many }) => ({
-    user: one(usersTable, {
-      fields: [collectionsTable.userId],
-      references: [usersTable.id]
-    }),
-    flashcards: many(flashcardsTable)
-  })
-)
 
-export const flashcardsRelations = relations(
-  flashcardsTable,
-  ({ one, many }) => ({
-    collection: one(collectionsTable, {
-      fields: [flashcardsTable.collectionId],
-      references: [collectionsTable.id]
-    }),
-    userProgress: many(userProgressTable)
-  })
-)
-
-export const userProgressRelations = relations(
-  userProgressTable,
-  ({ one }) => ({
-    user: one(usersTable, {
-      fields: [userProgressTable.userId],
-      references: [usersTable.id]
-    }),
-    flashcard: one(flashcardsTable, {
-      fields: [userProgressTable.flashcardId],
-      references: [flashcardsTable.id]
-    })
-  })
-)
