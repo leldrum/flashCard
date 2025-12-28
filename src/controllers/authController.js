@@ -21,23 +21,23 @@ export const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    const newUser = await db
+    const [newUser] = await db
       .insert(userTable)
       .values({
         firstName: firstName,
         name: name,
         email: email,
-        password: hashedPassword,
-        role: 'user'
+        password: hashedPassword
       })
       .returning()
 
-    if (newUser.length === 0) {
+    if (!newUser) {
       return res.status(500).json({ error: 'Erreur lors de la création' })
     }
 
     const token = jwt.sign({
-      userId: newUser.id,
+      userId: newUser.idUser,
+      isAdmin: newUser.isAdmin
       }, process.env.JWT_SECRET,
       {expiresIn: "24h"}
     )
@@ -74,15 +74,19 @@ export const login = async (req, res) => {
         return res.status(401).json({error: 'Invalid email or password'})
     }
 
-    const token = jwt.sign({userId: user.id}, process.env.JWT_SECRET, {expiresIn: '24h'})
+    const token = jwt.sign({
+      userId: user.idUser,
+      isAdmin: user.isAdmin
+    }, process.env.JWT_SECRET, {expiresIn: '24h'})
 
     res.json({
       message: 'Connexion réussie',
       userData: {
-        id: user.id,
+        idUser: user.idUser,
         firstName: user.firstName,
         name: user.name,
-        email: user.email
+        email: user.email,
+        isAdmin: user.isAdmin
       },
       token
     })

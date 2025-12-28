@@ -11,8 +11,10 @@ export const authenticateToken = (req, res, next) => {
 
     try {
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET)
-        const userId = decodedToken.userId
-        req.user = { userId}
+        req.user = { 
+            idUser: decodedToken.userId,
+            isAdmin: decodedToken.isAdmin
+        }
         next()
     } catch (error) {
         console.log(error)
