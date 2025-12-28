@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm"
 import { db } from "../db/db.js"
 import { cardTable, collectionTable } from '../db/schema.js'
+import { verifyToken } from "../middleware/jwt.js"
 
 export const createCard = async (req, res) => {
     try {
@@ -41,4 +42,51 @@ export const createCard = async (req, res) => {
             error: "failed to insert card"
         });
     } 
+}
+
+export const getCardById = async (req, res) => {
+
+    try {
+        const { id } = req.params;
+        const rows = await db
+            .select({ card: cardTable, collection: collectionTable })
+            .from(cardTable)
+            .leftJoin(collectionTable, eq(cardTable.idCollection, collectionTable.idCollection))
+            .where(eq(cardTable.idCard, id))
+            .limit(1);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "Card not found" });
+        }
+
+        const { card, collection } = rows[0];
+
+        // Decode token if provided (optional auth)
+        let requester = null;
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(" ")[1];
+        if (token) {
+            try {
+                const decoded = verifyToken(token);
+                requester = { idUser: decoded.userId, isAdmin: decoded.isAdmin };
+            } catch (_) {
+                // Ignore invalid token for public access checks
+            }
+        }
+
+        if (collection?.isPrivate) {
+            const isOwner = requester && collection.idUser === requester.idUser;
+            const isAdmin = requester && requester.isAdmin === true;
+            if (!isOwner && !isAdmin) {
+                return res.status(403).json({ error: "access denied: private collection" });
+            }
+        }
+
+        res.status(200).json(card);
+    } catch (error) {
+        console.error("Error fetching card:", error);
+        res.status(500).send({
+            error: "failed to fetch card"
+        });
+    }
 }
