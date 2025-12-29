@@ -77,3 +77,44 @@ export const getCardById = async (req, res) => {
         });
     }
 }
+
+export const getCardsByCollection = async (req, res) => {
+    try {
+        const { id } = req.params; 
+
+        if (!id) {
+            return res.status(400).json({ error: "idCollection is required" });
+        }
+
+        const [collection] = await db
+            .select()
+            .from(collectionTable)
+            .where(eq(collectionTable.idCollection, id))
+            .limit(1);
+
+        if (!collection) {
+            return res.status(404).json({ error: "Collection not found" });
+        }
+
+        if (collection.isPrivate) {
+            const isOwner = req.user && req.user.idUser === collection.idUser;
+            const isAdmin = req.user && req.user.isAdmin === true;
+
+            if (!isOwner && !isAdmin) {
+                return res.status(403).json({ error: "access denied: private collection" });
+            }
+        }
+
+        const cards = await db
+            .select()
+            .from(cardTable)
+            .where(eq(cardTable.idCollection, id));
+
+        return res.status(200).json(cards);
+    } catch (error) {
+        console.error("Error fetching cards:", error);
+        res.status(500).send({
+            error: "failed to fetch cards"
+        });
+    }
+}
