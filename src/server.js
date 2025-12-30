@@ -4,6 +4,7 @@ import express from 'express'
 import authRoutes from './router/authRouter.js'
 import path from 'path';
 import collectionRoutes from './router/collectionRouter.js'
+import cardRoutes from './router/cardRouter.js'
 
 
 const PORT = process.env.PORT || 3000
@@ -18,6 +19,9 @@ app.get('/', (req, res) => {
 });
 
 app.use('/collections', collectionRoutes)
+app.use('/cards', cardRoutes)
+
+
 
 app.listen(PORT, () => {
   console.log(`Serveur lancé sur http://localhost:${PORT}`)

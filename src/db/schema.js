@@ -17,7 +17,7 @@ export const collectionTable = sqliteTable('collections', {
     title : text({length:255}).notNull(),
     description : text({length:255}).notNull(),
     isPrivate: integer({mode: 'boolean'}).notNull(),
-    idUser: integer("idUser").references(() => userTable.idUser).notNull(),
+    idUser: text("idUser").references(() => userTable.idUser).notNull(),
     createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
 
@@ -42,10 +42,8 @@ export const revisionTable = sqliteTable('revisions', {
 
 export const levelTable = sqliteTable('levels', {
     idLevel : text().primaryKey().$defaultFn( () => uuidv4()),
-    title : text({length:255}).notNull(),
-    description : text({length:255}).notNull(),
-    isPrivate: integer({mode: 'boolean'}).notNull(),
-    idUser: integer("idUser").references(() => userTable.idUser).notNull(),
+    level : text({length:255}).notNull(),
+    delay : text({length:255}).notNull(),
     createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
 
