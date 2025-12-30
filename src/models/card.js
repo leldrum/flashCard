@@ -7,3 +7,10 @@ export const createCardSchema = z.object({
     backUrl: z.string().min(1).optional(),
     titleCollection: z.string().min(1).max(300),
 })
+
+export const updateCardSchema = z.object({
+    frontText: z.string().min(1).max(300).optional(),
+    backText: z.string().min(1).max(300).optional(),
+    frontUrl: z.string().min(1).optional(),
+    backUrl: z.string().min(1).optional(),
+})
