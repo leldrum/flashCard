@@ -44,3 +44,30 @@ export const validateParams = (schema) => {
         }
     }
 }
+
+export const validateCollectionTitle = (schema) => {
+    return (req, res, next) => {
+        if(schema instanceof ZodType){
+            try{
+                const title = req.params?.title
+                if (!title) {
+                    return res.status(400).send({ error: 'title param is required' })
+                }
+
+                schema.parse({title: title.toLowerCase().trim()})
+                next()
+            }
+            catch(error){
+                if(error instanceof ZodError){
+                    return res.status(400).send({
+                        error: 'Invalid query',
+                        details: error.issues
+                    })
+                }   
+                res.status(500).send({
+                    error: 'internal server error'
+                })
+            }
+        }
+    }
+}

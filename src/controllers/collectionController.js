@@ -7,15 +7,6 @@ import {request, response} from 'express'
 export const getCollectionsByTitle = async (req, res) => {
    try {
         const { title } = req.params;
-        const userId = req.user.idUser;
-
-        if (!title) {
-        return res.status(400).json({ error: "title param is required" });
-        }
-
-        if (!userId) {
-            return res.status(401).json({ error: "user not authenticated" });
-        }
         const [result] = await db
             .select()
             .from(collectionTable)
@@ -42,14 +33,7 @@ export const createCollection = async (req, res) => {
         const { title, description, isPrivate } = req.body;
         const userId = req.user.idUser;
         
-        if (!title) {
-            return res.status(400).json({ error: "title is required" });
-        }
-        
-        if (!userId) {
-            return res.status(401).json({ error: "user not authenticated" });
-        }
-        
+    
         const collectionData = {
             title,
             description: description || "",
@@ -70,15 +54,7 @@ export const createCollection = async (req, res) => {
 export const getCollectionById = async (req = request, res = response) => {
     try {
         const { id } = req.params;
-        const userId = req.user.idUser;
-
-        if (!id) {
-            return res.status(400).json({ error: "id of the collection is required" });
-        }
-
-        if (!userId) {
-            return res.status(401).json({ error: "user not authenticated" });
-        }
+      
 
         const [result] = await db.select().from(collectionTable).where(
             eq(collectionTable.idCollection, id)
@@ -91,6 +67,7 @@ export const getCollectionById = async (req = request, res = response) => {
         const collection = result;
         
         if (collection.isPrivate) {
+            const userId = req.user.idUser;
             const isAdmin = req.user.isAdmin;
             
             if (collection.idUser !== userId && !isAdmin) {
@@ -109,10 +86,6 @@ export const getMineCollections = async (req, res) => {
     try {
         const userId = req.user.idUser;
 
-         if (!userId) {
-            return res.status(401).json({ error: "user not authenticated" });
-        }
-
         const result = await db.select().from(collectionTable).where(
             eq(collectionTable.idUser, userId)
         );
@@ -128,15 +101,7 @@ export const getMineCollections = async (req, res) => {
 export const updateCollection = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.idUser;
-
-        if (!id) {
-            return res.status(400).json({ error: "id of the collection is required" });
-        }
-
-        if (!userId) {
-            return res.status(401).json({ error: "user not authenticated" });
-        }
+    
 
         const [collection] = await db.select().from(collectionTable).where(
             eq(collectionTable.idCollection, id)
@@ -148,7 +113,8 @@ export const updateCollection = async (req, res) => {
         
 
         const isAdmin = req.user.isAdmin;
-        
+        const userId = req.user.idUser;
+
         if (collection.idUser !== userId && !isAdmin) {
             return res.status(403).json({ error: "access denied: you can only update your own collections" });
         }
@@ -174,15 +140,6 @@ export const deleteCollection = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.idUser;
-
-        if (!userId) {
-            return res.status(401).json({ error: "user not authenticated" });
-        }
-
-        if (!id) {
-            return res.status(400).json({ error: "id of the collection is required" });
-        }
-
 
         const [collection] = await db.select().from(collectionTable).where(
             eq(collectionTable.idCollection, id)

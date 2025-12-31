@@ -6,7 +6,7 @@ export const authenticateToken = (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1]
 
     if(!token){
-        return res.status(403).json({error: "Access token required"})
+        return res.status(403).json({error: "Access token required, please login"})
     }
 
     try {
@@ -18,7 +18,7 @@ export const authenticateToken = (req, res, next) => {
         next()
     } catch (error) {
         console.log(error)
-        res.status(401).json({error: "invalid or expired acces token"})
+        res.status(401).json({error: "invalid or expired access token, please login again"})
     }
 
 }

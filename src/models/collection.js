@@ -11,3 +11,11 @@ export const updateCollectionSchema = z.object({
     description: z.string().min(1).max(300).optional(),
     isPrivate: z.boolean().optional(),
 })
+
+export const idCollectionSchema = z.object({
+    id: z.uuid(),
+})
+
+export const titleCollectionSchema = z.object({
+    title: z.string().min(1).max(300),
+})
