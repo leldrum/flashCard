@@ -27,7 +27,7 @@ export const cardTable = sqliteTable('cards', {
     backText : text({length:255}).notNull(),
     frontUrl : text({length:255}),
     backUrl : text({length:255}),
-    idCollection: text("idCollection").references(() => collectionTable.idCollection).notNull(),
+    idCollection: text("idCollection").references(() => collectionTable.idCollection, { onDelete: 'cascade' }).notNull(),
     createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
 
