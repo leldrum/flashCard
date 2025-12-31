@@ -1,17 +1,20 @@
 import {Router} from "express"
-import {getPublicCollections, getPrivateCollections, getCollection, createCollection, updateCollection, deleteCollection} from "../controllers/collectionController.js"
+import {getCollectionsByTitle, getCollectionById, createCollection, updateCollection, deleteCollection, getMineCollections} from "../controllers/collectionController.js"
 import { validateBody } from "../middleware/validation.js"
-import { createCollectionSchema } from "../models/collection.js"
+import { createCollectionSchema , updateCollectionSchema} from "../models/collection.js"
+import { authenticateToken } from "../middleware/authenticateToken.js"
 
 const router = Router()
+router.use(authenticateToken)
 
-router.get('/:title', getPublicCollections)
+router.get('/search/:title', getCollectionsByTitle)
+router.get('/mine', getMineCollections)
 
-router.get('/:id', getCollection)
-router.get('/:id', getPrivateCollections)
+router.get('/:id', getCollectionById)
 
 router.post('/', validateBody(createCollectionSchema), createCollection)
-router.put('/:id', updateCollection)
+router.patch('/:id', validateBody(updateCollectionSchema), updateCollection)
 router.delete('/:id', deleteCollection)
+
 
 export default router
