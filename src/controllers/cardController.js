@@ -270,3 +270,98 @@ export const updateCard = async (req, res) => {
         });
     }
 }
+
+export const reviseCard = async (req, res) => {
+    try {
+        const { id: cardId } = req.params;
+        const userId = req.user.idUser;
+
+        const [card] = await db
+            .select()
+            .from(cardTable)
+            .where(eq(cardTable.idCard, cardId))
+            .limit(1);
+
+        if (!card) {
+            return res.status(404).json({ error: "Card not found" });
+        }
+
+        const [existingRevision] = await db
+            .select( { revision: revisionTable, level: levelTable } )
+            .from(revisionTable)
+            .leftJoin(levelTable, eq(revisionTable.idLevel, levelTable.idLevel))
+            .where(and(eq(revisionTable.idCard, cardId), eq(revisionTable.idUser, userId)))
+            .limit(1);
+
+        const now = new Date();
+
+        if (existingRevision) {
+            const delayInDays = parseInt(existingRevision.level.delay);
+            const delayInMs = delayInDays * 24 * 60 * 60 * 1000;
+            const nextRevisionDate = new Date(existingRevision.revision.lastRevision).getTime() + delayInMs;
+
+            if (nextRevisionDate > now.getTime()) {
+                return res.status(400).json({ 
+                    error: "Card is not ready for review yet",
+                    nextRevisionDate: new Date(nextRevisionDate)
+                });
+            }
+
+            const currentLevelNum = parseInt(existingRevision.level.level);
+            const nextLevelNum = Math.min(currentLevelNum + 1, 5);
+            
+            const [nextLevel] = await db
+                .select()
+                .from(levelTable)
+                .where(eq(levelTable.level, nextLevelNum.toString()))
+                .limit(1);
+
+            const [updatedRevision] = await db
+                .update(revisionTable)
+                .set({
+                    idLevel: nextLevel.idLevel,
+                    lastRevision: now
+                })
+                .where(eq(revisionTable.idRevision, existingRevision.revision.idRevision))
+                .returning();
+
+            return res.status(200).json({
+                message: "Card revision updated successfully",
+                revision: updatedRevision
+            });
+        } else {
+            const [firstLevel] = await db
+                .select()
+                .from(levelTable)
+                .where(eq(levelTable.level, "1"))
+                .limit(1);
+
+            if (!firstLevel) {
+                return res.status(404).json({ error: "Level 1 not found in database" });
+            }
+
+            const revisionData = {
+                idCard: cardId,
+                idLevel: firstLevel.idLevel,
+                idUser: userId,
+                lastRevision: now
+            };
+
+            const [newRevision] = await db
+                .insert(revisionTable)
+                .values(revisionData)
+                .returning();
+
+            return res.status(201).json({
+                message: "Card revision created successfully",
+                revision: newRevision
+            });
+        }
+
+    } catch (error) {
+        console.error("Error revising card:", error);
+        res.status(500).send({
+            error: "failed to revise card"
+        });
+    }
+}
