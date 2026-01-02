@@ -33,7 +33,7 @@ export const cardTable = sqliteTable('cards', {
 
 export const revisionTable = sqliteTable('revisions', {
     idRevision: text().primaryKey().$defaultFn( () => uuidv4()),
-    idCard : text("idCard").references(() => cardTable.idCard).notNull(),
+    idCard : text("idCard").references(() => cardTable.idCard, { onDelete: 'cascade' }).notNull(),
     idLevel: text("idLevel").references(() => levelTable.idLevel).notNull(),
     idUser: text("idUser").references(() => userTable.idUser).notNull(),
     lastRevision: integer('lastRevision', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
