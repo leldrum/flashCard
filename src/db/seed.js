@@ -4,7 +4,7 @@ import { cardTable, collectionTable, userTable, levelTable, revisionTable } from
 
 async function seed() {
     try {
-        console.log('Seeding database..');
+        console.log('Seeding database...');
 
         await db.delete(revisionTable);
         await db.delete(cardTable);
@@ -273,7 +273,7 @@ async function seed() {
         console.log('Database seeded successfully!');
     
     } catch (error) {
-        console.log(' Error seeding database', error);
+        console.log('Error seeding database', error);
     }
 }
 

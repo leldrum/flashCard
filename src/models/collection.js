@@ -13,7 +13,7 @@ export const updateCollectionSchema = z.object({
 })
 
 export const idCollectionSchema = z.object({
-    id: z.uuid(),
+    id: z.uuid("Invalid collection ID format"),
 })
 
 export const titleCollectionSchema = z.object({

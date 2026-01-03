@@ -17,7 +17,7 @@ export const collectionTable = sqliteTable('collections', {
     title : text({length:255}).notNull(),
     description : text({length:255}).notNull(),
     isPrivate: integer({mode: 'boolean'}).notNull(),
-    idUser: text("idUser").references(() => userTable.idUser).notNull(),
+    idUser: text("idUser").references(() => userTable.idUser, { onDelete: 'cascade' }).notNull(),
     createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })
 
@@ -35,7 +35,7 @@ export const revisionTable = sqliteTable('revisions', {
     idRevision: text().primaryKey().$defaultFn( () => uuidv4()),
     idCard : text("idCard").references(() => cardTable.idCard, { onDelete: 'cascade' }).notNull(),
     idLevel: text("idLevel").references(() => levelTable.idLevel).notNull(),
-    idUser: text("idUser").references(() => userTable.idUser).notNull(),
+    idUser: text("idUser").references(() => userTable.idUser, { onDelete: 'cascade' }).notNull(),
     lastRevision: integer('lastRevision', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
     createdAt: integer('created_at', {node: 'timestamp'}).notNull().$defaultFn(() => new Date()),
 })

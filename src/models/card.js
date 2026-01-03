@@ -16,5 +16,5 @@ export const updateCardSchema = z.object({
 })
 
 export const idCardSchema = z.object({
-    id: z.uuid(),
+    id: z.uuid("Invalid card ID format"),
 })
