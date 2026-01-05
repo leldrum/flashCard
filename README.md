@@ -55,7 +55,7 @@ Le serveur démarre sur `http://localhost:3000`.
 ```powershell
 npm run db:push
 ```
-2) (Optionnel) Lancer le studio:
+2) Lancer le studio:
 ```powershell
 npm run db:studio
 ```
