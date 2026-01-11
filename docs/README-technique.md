@@ -27,10 +27,10 @@ Crée un nouveau compte utilisateur.
 **Body (JSON):**
 ```json
 {
-  "email": "user@example.com",
-  "firstName": "Jean",
-  "name": "Dupont",
-  "password": "SecurePassword123"
+  "email": "claire@example.com",
+  "firstName": "Claire",
+  "name": "Bernard",
+  "password": "MyFlashCards789!"
 }
 ```
 
@@ -60,8 +60,8 @@ Authentifie un utilisateur et retourne un token JWT.
 **Body (JSON):**
 ```json
 {
-  "email": "user@example.com",
-  "password": "SecurePassword123"
+  "email": "alice@example.com",
+  "password": "Password123!"
 }
 ```
 
@@ -118,7 +118,7 @@ Recherche des collections publiques par titre.
 
 **Exemple:**
 ```
-GET /collections/search/Python
+GET /collections/search/JavaScript
 ```
 
 **Réponses:**
@@ -189,8 +189,8 @@ Authorization: Bearer <token>
 **Body (JSON):**
 ```json
 {
-  "title": "JavaScript Avancé",
-  "description": "Concepts avancés de JavaScript",
+  "title": "Vocabulaire Espagnol",
+  "description": "Mots et expressions essentiels en espagnol",
   "isPrivate": false
 }
 ```
@@ -230,9 +230,9 @@ Authorization: Bearer <token>
 **Body (JSON, tous les champs optionnels):**
 ```json
 {
-  "title": "JavaScript Avancé (v2)",
-  "description": "Mise à jour des concepts avancés",
-  "isPrivate": true
+  "title": "Histoire Générale",
+  "description": "Événements historiques mondiaux",
+  "isPrivate": false
 }
 ```
 
@@ -279,7 +279,7 @@ Authorization: Bearer <token>
 
 ## Flashcards
 
-⚠️ **Toutes les routes de flashcards nécessitent une authentification JWT Bearer.**
+ **Toutes les routes de flashcards nécessitent une authentification JWT Bearer.**
 
 ### `POST /cards` — Créer une flashcard
 
@@ -298,10 +298,10 @@ Authorization: Bearer <token>
 **Body (JSON):**
 ```json
 {
-  "frontText": "Qu'est-ce que le hoisting en JS ?",
-  "backText": "Le hoisting est le comportement de déplacement des déclarations...",
-  "frontUrl": "https://example.com/front.jpg",
-  "backUrl": "https://example.com/back.jpg",
+  "frontText": "Array.map()",
+  "backText": "Crée un nouveau tableau en appliquant une fonction à chaque élément",
+  "frontUrl": null,
+  "backUrl": null,
   "idCollection": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
@@ -422,10 +422,10 @@ Authorization: Bearer <token>
 **Body (JSON, tous les champs optionnels):**
 ```json
 {
-  "frontText": "Qu'est-ce que le hoisting ?",
-  "backText": "Comportement de déplacement des déclarations...",
-  "frontUrl": "https://example.com/front-updated.jpg",
-  "backUrl": "https://example.com/back-updated.jpg"
+  "frontText": "Dog",
+  "backText": "Chien (animal domestique)",
+  "frontUrl": null,
+  "backUrl": null
 }
 ```
 
@@ -495,7 +495,7 @@ Authorization: Bearer <token>
 
 ## Utilisateurs (Admin)
 
-⚠️ **Toutes les routes utilisateurs nécessitent une authentification JWT Bearer ET le rôle administrateur.**
+ **Toutes les routes utilisateurs nécessitent une authentification JWT Bearer ET le rôle administrateur.**
 
 ### `GET /users/` — Lister tous les utilisateurs
 
@@ -546,7 +546,12 @@ Authorization: Bearer <token>
 
 ### `DELETE /users/:id` — Supprimer un utilisateur
 
-Supprime un utilisateur. Les collections et flashcards associées sont supprimées en cascade.
+Supprime un utilisateur et tous ses contenus associés.
+
+** Attention : Cette action est irréversible et entraîne :**
+- Suppression de TOUTES les collections de l'utilisateur
+- Suppression de TOUTES les flashcards de ces collections
+- Suppression de TOUTES les révisions associées
 
 | Propriété | Valeur |
 |-----------|--------|
@@ -581,3 +586,8 @@ Authorization: Bearer <token>
 | `404 Not Found` | Ressource introuvable | ID inexistant ou inaccessible |
 | `409 Conflict` | Conflit | Email déjà utilisé |
 | `500 Internal Server Error` | Erreur serveur | Erreur non gérée |
+
+
+## Schéma de la base de donnée
+
+<img width="2620" height="1616" alt="drawSQL-image-export-2025-12-10(1)" src="https://github.com/user-attachments/assets/39ec259b-8005-4e46-b6d6-09010a8f4e3d" />

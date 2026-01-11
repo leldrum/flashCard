@@ -20,9 +20,6 @@ app.use('/users', userRoutes)
 app.use('/collections', collectionRoutes)
 app.use('/cards', cardRoutes)
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'src/public', 'index.html'));
-});
 
 
 
