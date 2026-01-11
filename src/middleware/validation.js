@@ -9,9 +9,20 @@ export const validateBody = (schema) => {
             }
             catch(error){
                 if(error instanceof ZodError){
+                    const formattedErrors = error.issues.map(issue => {
+                        const fieldName = issue.path.join('.')
+                        let message = issue.message
+                        if(message.includes('Invalid input') && message.includes('received undefined')) {
+                            message = `${fieldName} is required`
+                        }
+                        return {
+                            field: fieldName,
+                            message: message
+                        }
+                    })
                     return res.status(400).send({
                         error: 'Validation failed',
-                        details: error.issues
+                        details: formattedErrors
                     })
                 }
                 res.status(500).send({

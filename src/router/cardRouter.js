@@ -13,7 +13,7 @@ router.post('/:id/revise', validateParams(idCardSchema), reviseCard)
 router.get('/collection/:id/review', validateParams(idCardSchema), getCardsToReview)
 router.get('/collection/:id', validateParams(idCardSchema), getCardsByCollection)
 router.get('/:id', validateParams(idCardSchema), getCardById)
-router.patch('/:id', validateBody(updateCardSchema), updateCard)
+router.put('/:id', validateBody(updateCardSchema), updateCard)
 router.delete('/:id', validateParams(idCardSchema), deleteCard)
 
 export default router

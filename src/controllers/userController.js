@@ -65,6 +65,11 @@ export const getUserById = async (req, res) => {
 export const deleteUserById = async (req, res) => {
     const { id } = req.params
     try {
+        if (req.user.idUser === id) {
+            return res.status(403).json({
+                error: "You cannot delete your own account"
+            })
+        }
     
         const user = await db.select().from(userTable).where(eq(userTable.idUser, id)).limit(1)
         

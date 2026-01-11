@@ -1,13 +1,13 @@
-import { eq, desc, like, and } from "drizzle-orm"
+import { eq, desc, like, and, inArray, not } from "drizzle-orm"
 import { db } from "../db/db.js"
 
-import { collectionTable } from '../db/schema.js'
+import { collectionTable, userTable, cardTable, revisionTable } from '../db/schema.js'
 import {request, response} from 'express'
 
 export const getCollectionsByTitle = async (req, res) => {
    try {
         const { title } = req.params;
-        const [result] = await db
+        const result = await db
             .select()
             .from(collectionTable)
             .where(and(
@@ -16,7 +16,7 @@ export const getCollectionsByTitle = async (req, res) => {
             ))
             .orderBy(desc(collectionTable.createdAt));
 
-        if (!result) {
+        if (result.length === 0) {
             return res.status(404).json({ error: "no public collections match this title" });
         }
         res.status(200).json(result);
@@ -32,7 +32,6 @@ export const createCollection = async (req, res) => {
     try {
         const { title, description, isPrivate } = req.body;
         const userId = req.user.idUser;
-        
     
         const collectionData = {
             title,
@@ -89,6 +88,11 @@ export const getMineCollections = async (req, res) => {
         const result = await db.select().from(collectionTable).where(
             eq(collectionTable.idUser, userId)
         );
+        
+        if (result.length === 0) {
+            return res.status(200).json({ message: "You have no collection" });
+        }
+        
         res.status(200).json(result);
     } catch (error) {
         res.status(500).send({
@@ -123,6 +127,35 @@ export const updateCollection = async (req, res) => {
         if (req.body.title !== undefined) updateData.title = req.body.title;
         if (req.body.description !== undefined) updateData.description = req.body.description;
         if (req.body.isPrivate !== undefined) updateData.isPrivate = req.body.isPrivate;
+        
+        //si la collection passe de publique à privée, supprimer les révisions des non-propriétaires/non-admins
+        if (req.body.isPrivate === true && collection.isPrivate === false) {
+            //récupérer toutes les cartes de cette collection
+            const cards = await db.select().from(cardTable).where(
+                eq(cardTable.idCollection, id)
+            );
+            
+            if (cards.length > 0) {
+                const cardIds = cards.map(card => card.idCard);
+                
+                //récupérer tous les utilisateurs admins
+                const admins = await db.select().from(userTable).where(
+                    eq(userTable.isAdmin, true)
+                );
+                const adminIds = admins.map(admin => admin.idUser);
+                
+                // Créer la liste des utilisateurs à exclure (propriétaire + admins)
+                const excludedUserIds = [collection.idUser, ...adminIds];
+                
+                //supprimer les révisions pour les utilisateurs qui ne sont ni le propriétaire ni admin
+                await db.delete(revisionTable).where(
+                    and(
+                        inArray(revisionTable.idCard, cardIds),
+                        not(inArray(revisionTable.idUser, excludedUserIds))
+                    )
+                );
+            }
+        }
         
         const result = await db.update(collectionTable).set(updateData).where(
             eq(collectionTable.idCollection, id)                

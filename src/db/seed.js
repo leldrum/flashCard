@@ -13,7 +13,7 @@ async function seed() {
         await db.delete(levelTable);
       
         // Créer plusieurs utilisateurs
-        const passwords = ['Password123!', 'SecurePass456!', 'MyFlashCards789!'];
+        const passwords = ['Password123!', 'SecurePass456!', 'MyFlashCards789!', 'EmptyUser123!'];
         const hashedPasswords = await Promise.all(passwords.map(pwd => bcrypt.hash(pwd, 12)));
 
         const seedUsers = [
@@ -36,6 +36,13 @@ async function seed() {
                 name: 'Bernard',
                 email: 'claire@example.com',
                 password: hashedPasswords[2],
+                isAdmin: false,
+            },
+            {
+                firstName: 'David',
+                name: 'Lefevre',
+                email: 'david@example.com',
+                password: hashedPasswords[3],
                 isAdmin: false,
             },
         ];
@@ -297,50 +304,76 @@ async function seed() {
 
         const insertedCards = await db.insert(cardTable).values(seedCards).returning();
 
-        // Générer des dates pour les révisions
+        // Générer des dates pour tester les révisions
+        // Niveaux et leurs délais : 1=1j, 2=2j, 3=4j, 4=8j, 5=16j
         const now = new Date();
-        const dates = {
-            oneHourAgo: new Date(now.getTime() - 60 * 60 * 1000),
-            oneDayAgo: new Date(now.getTime() - 24 * 60 * 60 * 1000),
-            twoDaysAgo: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
-            threeDaysAgo: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
-            fourDaysAgo: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000),
-            sevenDaysAgo: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-            fourteenDaysAgo: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
-            thirtyDaysAgo: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
-        };
-
+        
         const seedRevisions = [
-            // === Révisions pour Alice ===
-            { idCard: insertedCards[0].idCard, idLevel: insertedLevels[2].idLevel, idUser: insertedUsers[0].idUser, lastRevision: dates.fourDaysAgo },
-            { idCard: insertedCards[1].idCard, idLevel: insertedLevels[1].idLevel, idUser: insertedUsers[0].idUser, lastRevision: dates.twoDaysAgo },
-            { idCard: insertedCards[2].idCard, idLevel: insertedLevels[0].idLevel, idUser: insertedUsers[0].idUser, lastRevision: dates.oneDayAgo },
-            { idCard: insertedCards[3].idCard, idLevel: insertedLevels[3].idLevel, idUser: insertedUsers[0].idUser, lastRevision: dates.sevenDaysAgo },
-            // Capitales
-            { idCard: insertedCards[5].idCard, idLevel: insertedLevels[2].idLevel, idUser: insertedUsers[0].idUser, lastRevision: dates.oneDayAgo },
-            { idCard: insertedCards[6].idCard, idLevel: insertedLevels[1].idLevel, idUser: insertedUsers[0].idUser, lastRevision: dates.threeDaysAgo },
-            { idCard: insertedCards[7].idCard, idLevel: insertedLevels[4].idLevel, idUser: insertedUsers[0].idUser, lastRevision: dates.fourteenDaysAgo },
-            // JavaScript
-            { idCard: insertedCards[10].idCard, idLevel: insertedLevels[2].idLevel, idUser: insertedUsers[0].idUser, lastRevision: dates.twoDaysAgo },
-            { idCard: insertedCards[11].idCard, idLevel: insertedLevels[1].idLevel, idUser: insertedUsers[0].idUser, lastRevision: dates.oneDayAgo },
-            { idCard: insertedCards[12].idCard, idLevel: insertedLevels[3].idLevel, idUser: insertedUsers[0].idUser, lastRevision: dates.fourDaysAgo },
+            // === TESTS POUR ALICE ===
+            // Card 0 (Dog) - Niveau 1 (délai 1j) - Révisée il y a 2j → PRÊTE à réviser
+            { idCard: insertedCards[0].idCard, idLevel: insertedLevels[0].idLevel, idUser: insertedUsers[0].idUser, lastRevision: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000) },
             
-            // === Révisions pour Bruno ===
-            // Mathématiques
-            { idCard: insertedCards[14].idCard, idLevel: insertedLevels[2].idLevel, idUser: insertedUsers[1].idUser, lastRevision: dates.sevenDaysAgo },
-            { idCard: insertedCards[15].idCard, idLevel: insertedLevels[1].idLevel, idUser: insertedUsers[1].idUser, lastRevision: dates.oneDayAgo },
-            // Histoire
-            { idCard: insertedCards[16].idCard, idLevel: insertedLevels[2].idLevel, idUser: insertedUsers[1].idUser, lastRevision: dates.fourDaysAgo },
-            { idCard: insertedCards[17].idCard, idLevel: insertedLevels[1].idLevel, idUser: insertedUsers[1].idUser, lastRevision: dates.oneDayAgo },
-            { idCard: insertedCards[18].idCard, idLevel: insertedLevels[3].idLevel, idUser: insertedUsers[1].idUser, lastRevision: dates.sevenDaysAgo },
+            // Card 1 (Cat) - Niveau 2 (délai 2j) - Révisée il y a 3j → PRÊTE à réviser
+            { idCard: insertedCards[1].idCard, idLevel: insertedLevels[1].idLevel, idUser: insertedUsers[0].idUser, lastRevision: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000) },
             
-            // === Révisions pour Claire ===
-            // Espagnol
-            { idCard: insertedCards[19].idCard, idLevel: insertedLevels[1].idLevel, idUser: insertedUsers[2].idUser, lastRevision: dates.twoDaysAgo },
-            { idCard: insertedCards[20].idCard, idLevel: insertedLevels[0].idLevel, idUser: insertedUsers[2].idUser, lastRevision: dates.oneHourAgo },
-            // Géographie
-            { idCard: insertedCards[22].idCard, idLevel: insertedLevels[2].idLevel, idUser: insertedUsers[2].idUser, lastRevision: dates.threeDaysAgo },
-            { idCard: insertedCards[23].idCard, idLevel: insertedLevels[1].idLevel, idUser: insertedUsers[2].idUser, lastRevision: dates.oneDayAgo },
+            // Card 2 (House) - Niveau 3 (délai 4j) - Révisée il y a 5j → PRÊTE à réviser
+            { idCard: insertedCards[2].idCard, idLevel: insertedLevels[2].idLevel, idUser: insertedUsers[0].idUser, lastRevision: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000) },
+            
+            // Card 3 (Water) - Niveau 4 (délai 8j) - Révisée il y a 10j → PRÊTE à réviser
+            { idCard: insertedCards[3].idCard, idLevel: insertedLevels[3].idLevel, idUser: insertedUsers[0].idUser, lastRevision: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000) },
+            
+            // Card 5 (Paris) - Niveau 1 (délai 1j) - Révisée il y a 12h → PAS PRÊTE (trop tôt)
+            { idCard: insertedCards[5].idCard, idLevel: insertedLevels[0].idLevel, idUser: insertedUsers[0].idUser, lastRevision: new Date(now.getTime() - 12 * 60 * 60 * 1000) },
+            
+            // Card 6 (Berlin) - Niveau 2 (délai 2j) - Révisée il y a 1j → PAS PRÊTE (trop tôt)
+            { idCard: insertedCards[6].idCard, idLevel: insertedLevels[1].idLevel, idUser: insertedUsers[0].idUser, lastRevision: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000) },
+            
+            // Card 7 (Tokyo) - Niveau 5 (délai 16j) - Révisée il y a 20j → PRÊTE à réviser
+            { idCard: insertedCards[7].idCard, idLevel: insertedLevels[4].idLevel, idUser: insertedUsers[0].idUser, lastRevision: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000) },
+            
+            // Card 10 (Array.map()) - Niveau 3 (délai 4j) - Révisée il y a 2j → PAS PRÊTE (trop tôt)
+            { idCard: insertedCards[10].idCard, idLevel: insertedLevels[2].idLevel, idUser: insertedUsers[0].idUser, lastRevision: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000) },
+            
+            // === TESTS POUR BRUNO ===
+            // Card 14 (a² + b² = c²) - Niveau 2 (délai 2j) - Révisée il y a 4j → PRÊTE
+            { idCard: insertedCards[14].idCard, idLevel: insertedLevels[1].idLevel, idUser: insertedUsers[1].idUser, lastRevision: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000) },
+            
+            // Card 15 (sin²θ + cos²θ = 1) - Niveau 4 (délai 8j) - Révisée il y a 9j → PRÊTE
+            { idCard: insertedCards[15].idCard, idLevel: insertedLevels[3].idLevel, idUser: insertedUsers[1].idUser, lastRevision: new Date(now.getTime() - 9 * 24 * 60 * 60 * 1000) },
+            
+            // Card 16 (1789) - Niveau 1 (délai 1j) - Révisée il y a 6h → PAS PRÊTE
+            { idCard: insertedCards[16].idCard, idLevel: insertedLevels[0].idLevel, idUser: insertedUsers[1].idUser, lastRevision: new Date(now.getTime() - 6 * 60 * 60 * 1000) },
+            
+            // Bruno révise des cartes publiques d'Alice
+            // Card 0 (Dog) - Niveau 2 (délai 2j) - Révisée il y a 3j → PRÊTE
+            { idCard: insertedCards[0].idCard, idLevel: insertedLevels[1].idLevel, idUser: insertedUsers[1].idUser, lastRevision: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000) },
+            
+            // Card 5 (Paris) - Niveau 3 (délai 4j) - Révisée il y a 1j → PAS PRÊTE
+            { idCard: insertedCards[5].idCard, idLevel: insertedLevels[2].idLevel, idUser: insertedUsers[1].idUser, lastRevision: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000) },
+            
+            // === TESTS POUR CLAIRE ===
+            // Card 19 (Hola) - Niveau 1 (délai 1j) - Révisée il y a 2j → PRÊTE
+            { idCard: insertedCards[19].idCard, idLevel: insertedLevels[0].idLevel, idUser: insertedUsers[2].idUser, lastRevision: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000) },
+            
+            // Card 20 (Gracias) - Niveau 5 (délai 16j) - Révisée il y a 10j → PAS PRÊTE
+            { idCard: insertedCards[20].idCard, idLevel: insertedLevels[4].idLevel, idUser: insertedUsers[2].idUser, lastRevision: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000) },
+            
+            // Card 22 (Nil) - Niveau 3 (délai 4j) - Révisée il y a 5j → PRÊTE
+            { idCard: insertedCards[22].idCard, idLevel: insertedLevels[2].idLevel, idUser: insertedUsers[2].idUser, lastRevision: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000) },
+            
+            // Claire révise aussi des cartes publiques d'Alice
+            // Card 0 (Dog) - Niveau 4 (délai 8j) - Révisée il y a 4j → PAS PRÊTE
+            { idCard: insertedCards[0].idCard, idLevel: insertedLevels[3].idLevel, idUser: insertedUsers[2].idUser, lastRevision: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000) },
+            
+            // Card 1 (Cat) - Niveau 2 (délai 2j) - Révisée il y a 3j → PRÊTE
+            { idCard: insertedCards[1].idCard, idLevel: insertedLevels[1].idLevel, idUser: insertedUsers[2].idUser, lastRevision: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000) },
+            
+            // === TESTS POUR DAVID (utilisateur sans collections) ===
+            // Card 0 (Dog) - Niveau 1 (délai 1j) - Révisée il y a 2j → PRÊTE
+            { idCard: insertedCards[0].idCard, idLevel: insertedLevels[0].idLevel, idUser: insertedUsers[3].idUser, lastRevision: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000) },
+            
+            // Card 5 (Paris) - Niveau 2 (délai 2j) - Révisée il y a 1j → PAS PRÊTE
+            { idCard: insertedCards[5].idCard, idLevel: insertedLevels[1].idLevel, idUser: insertedUsers[3].idUser, lastRevision: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000) },
         ];
 
         await db.insert(revisionTable).values(seedRevisions);

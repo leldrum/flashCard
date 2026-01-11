@@ -6,10 +6,6 @@ export const createCard = async (req, res) => {
     try {
         const { frontText, backText, frontUrl, backUrl, idCollection } = req.body;
 
-        if (!idCollection) {
-            return res.status(400).json({ error: "idCollection is required" });
-        }
-
         const [collection] = await db
             .select()
             .from(collectionTable)
@@ -24,7 +20,7 @@ export const createCard = async (req, res) => {
         const isAdmin = req.user && req.user.isAdmin === true;
 
         if (!isOwner && !isAdmin) {
-            return res.status(403).json({ error: "access denied: you must be the owner of the collection" });
+            return res.status(403).json({ error: "access denied: you must be the owner of the collection or an admin" });
         }
     
         const cardData = {
@@ -108,6 +104,10 @@ export const getCardsByCollection = async (req, res) => {
             .select()
             .from(cardTable)
             .where(eq(cardTable.idCollection, id));
+
+        if (cards.length === 0) {
+            return res.status(200).json({ message: "You have no cards in this collection" });
+        }
 
         return res.status(200).json(cards);
     } catch (error) {
@@ -276,14 +276,25 @@ export const reviseCard = async (req, res) => {
         const { id: cardId } = req.params;
         const userId = req.user.idUser;
 
-        const [card] = await db
-            .select()
+        const [cardData] = await db
+            .select({ card: cardTable, collection: collectionTable })
             .from(cardTable)
+            .leftJoin(collectionTable, eq(cardTable.idCollection, collectionTable.idCollection))
             .where(eq(cardTable.idCard, cardId))
             .limit(1);
 
-        if (!card) {
+        if (!cardData) {
             return res.status(404).json({ error: "Card not found" });
+        }
+
+        const { card, collection } = cardData;
+
+        if (collection.isPrivate) {
+            const isOwner = req.user && req.user.idUser === collection.idUser;
+            
+            if (!isOwner) {
+                return res.status(403).json({ error: "access denied: this card belongs to a private collection" });
+            }
         }
 
         const [existingRevision] = await db
@@ -327,7 +338,18 @@ export const reviseCard = async (req, res) => {
 
             return res.status(200).json({
                 message: "Card revision updated successfully",
-                revision: updatedRevision
+                card: {
+                    frontText: card.frontText,
+                    backText: card.backText,
+                    frontUrl: card.frontUrl,
+                    backUrl: card.backUrl
+                },
+                level: {
+                    level: nextLevel.level,
+                    delay: nextLevel.delay
+                },
+                lastRevision: updatedRevision.lastRevision,
+                nextRevisionDate: new Date(now.getTime() + parseInt(nextLevel.delay) * 24 * 60 * 60 * 1000)
             });
         } else {
             const [firstLevel] = await db
@@ -354,7 +376,18 @@ export const reviseCard = async (req, res) => {
 
             return res.status(201).json({
                 message: "Card revision created successfully",
-                revision: newRevision
+                card: {
+                    frontText: card.frontText,
+                    backText: card.backText,
+                    frontUrl: card.frontUrl,
+                    backUrl: card.backUrl
+                },
+                level: {
+                    level: firstLevel.level,
+                    delay: firstLevel.delay
+                },
+                lastRevision: newRevision.lastRevision,
+                nextRevisionDate: new Date(now.getTime() + parseInt(firstLevel.delay) * 24 * 60 * 60 * 1000)
             });
         }
 

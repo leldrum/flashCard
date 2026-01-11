@@ -1,7 +1,10 @@
 import jwt from "jsonwebtoken"
 import "dotenv/config"
+import { db } from "../db/db.js"
+import { userTable } from "../db/schema.js"
+import { eq } from "drizzle-orm"
 
-export const authenticateToken = (req, res, next) => {
+export const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers.authorization
     const token = authHeader && authHeader.split(' ')[1]
 
@@ -11,9 +14,16 @@ export const authenticateToken = (req, res, next) => {
 
     try {
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET)
+        
+        const [user] = await db.select().from(userTable).where(eq(userTable.idUser, decodedToken.userId)).limit(1)
+        
+        if (!user) {
+            return res.status(401).json({error: "User no longer exists, please register again"})
+        }
+        
         req.user = { 
-            idUser: decodedToken.userId,
-            isAdmin: decodedToken.isAdmin
+            idUser: user.idUser,
+            isAdmin: user.isAdmin
         }
         next()
     } catch (error) {

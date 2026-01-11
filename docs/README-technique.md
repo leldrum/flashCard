@@ -72,7 +72,8 @@ Authentifie un utilisateur et retourne un token JWT.
 
 **Réponses:**
 - `200 OK`: Connexion réussie — retourne `{ message, userData, token }`
-- `401 Unauthorized`: Identifiants invalides
+- `401 Unauthorized`: Mot de passe incorrect
+- `404 Not Found`: Email non trouvé / utilisateur inexistant
 - `500 Internal Server Error`: Erreur serveur
 
 ---
@@ -93,9 +94,11 @@ Authorization: Bearer <token>
 
 **Réponses:**
 - `200 OK`: Retourne `{ user }`
-- `401 Unauthorized`: Token invalide ou expiré
+- `401 Unauthorized`: Token invalide, expiré, ou utilisateur n'existe plus en base de données
 - `403 Forbidden`: Token manquant
 - `404 Not Found`: Utilisateur introuvable
+
+**Note de sécurité:** Le middleware `authenticateToken` vérifie non seulement la validité du JWT, mais aussi que l'utilisateur existe toujours en base de données. Si un utilisateur est supprimé, son token devient invalide.
 
 ---
 
@@ -141,7 +144,7 @@ Authorization: Bearer <token>
 ```
 
 **Réponses:**
-- `200 OK`: Retourne la liste des collections de l'utilisateur
+- `200 OK`: Retourne la liste des collections de l'utilisateur (ou message "You have no collection" si vide)
 
 ---
 
@@ -206,7 +209,7 @@ Authorization: Bearer <token>
 
 ---
 
-### `PATCH /collections/:id` — Modifier une collection
+### `PUT /collections/:id` — Modifier une collection
 
 Modifie une collection existante (titre, description, visibilité).
 
@@ -246,6 +249,8 @@ Authorization: Bearer <token>
 - `200 OK`: Collection mise à jour avec succès
 - `403 Forbidden`: Accès refusé (non propriétaire)
 - `404 Not Found`: Collection introuvable
+
+** Comportement important:** Lorsqu'une collection passe de publique à privée (`isPrivate: false` → `true`), toutes les révisions des utilisateurs (sauf le propriétaire et les admins) sont automatiquement supprimées pour préserver la confidentialité.
 
 ---
 
@@ -341,7 +346,9 @@ Authorization: Bearer <token>
 ```
 
 **Réponses:**
-- `200 OK`: Retourne la liste des flashcards
+- `200 OK`: Retourne la liste des flashcards (ou message "You have no cards in this collection" si vide)
+
+**Note:** Pour les collections privées, seul le propriétaire peut voir et réviser les cartes. Les admins peuvent voir les collections privées mais ne peuvent pas réviser les cartes d'autres utilisateurs.
 
 ---
 
@@ -398,7 +405,7 @@ Authorization: Bearer <token>
 
 ---
 
-### `PATCH /cards/:id` — Modifier une flashcard
+### `PUT /cards/:id` — Modifier une flashcard
 
 Modifie une flashcard existante (textes, URLs).
 
@@ -462,7 +469,26 @@ Authorization: Bearer <token>
 ```
 
 **Réponses:**
-- `200 OK`: Révision enregistrée avec succès
+- `200 OK`: Révision enregistrée avec succès — retourne un objet détaillé:
+```json
+{
+  "message": "Revision successful",
+  "card": {
+    "frontText": "Dog",
+    "backText": "Chien",
+    "frontUrl": null,
+    "backUrl": null
+  },
+  "level": {
+    "level": 2,
+    "delay": 2
+  },
+  "lastRevision": "2026-01-11T10:30:00.000Z",
+  "nextRevisionDate": "2026-01-13T10:30:00.000Z"
+}
+```
+- `403 Forbidden`: Accès refusé (collection privée dont vous n'êtes pas propriétaire)
+- `404 Not Found`: Carte introuvable
 
 ---
 
@@ -572,7 +598,53 @@ Authorization: Bearer <token>
 
 **Réponses:**
 - `200 OK` / `204 No Content`: Suppression effectuée
+- `403 Forbidden`: Un administrateur ne peut pas supprimer son propre compte
 - `404 Not Found`: Utilisateur introuvable
+
+** Protection:** Un administrateur ne peut pas supprimer son propre compte pour éviter de se bloquer l'accès à l'administration.
+
+---
+
+## Notes techniques
+
+### Système de révision espacée
+
+L'application utilise un algorithme de répétition espacée avec 5 niveaux :
+
+| Niveau | Délai avant prochaine révision |
+|--------|--------------------------------|
+| 1 | 1 jour |
+| 2 | 2 jours |
+| 3 | 4 jours |
+| 4 | 8 jours |
+| 5 | 16 jours |
+
+Chaque révision incrémente le niveau de la carte (jusqu'à 5 maximum). La date de prochaine révision est calculée automatiquement.
+
+### Authentification JWT
+
+- **Durée de validité:** 24 heures
+- **Vérification:** Le middleware `authenticateToken` vérifie non seulement la validité du JWT, mais aussi l'existence de l'utilisateur en base de données
+- **Header requis:** `Authorization: Bearer <token>`
+- Si un utilisateur est supprimé, tous ses tokens deviennent automatiquement invalides
+
+### Gestion de la confidentialité
+
+**Collections privées:**
+- Seul le propriétaire peut voir et réviser les cartes
+- Les admins peuvent voir les collections privées mais **ne peuvent pas réviser** les cartes des autres utilisateurs
+
+**Passage en privé:**
+Lorsqu'une collection passe de publique à privée, toutes les révisions des utilisateurs (sauf le propriétaire et les admins) sont automatiquement supprimées. Cela garantit que les données de révision restent confidentielles.
+
+### Données de test (seed)
+
+Le fichier `seed.js` génère des données de test complètes :
+- **4 utilisateurs:** Alice (admin), Bruno, Claire, David (sans collection)
+- **7 collections:** Mix de publiques et privées
+- **24 cartes:** Réparties dans les collections
+- **20 révisions:** Avec dates calculées pour tester la disponibilité (11 prêtes, 9 pas encore)
+- Révisions multi-utilisateurs sur les mêmes cartes pour tester la concurrence
 
 ---
 

@@ -6,14 +6,14 @@ import { authenticateToken } from "../middleware/authenticateToken.js"
 
 const router = Router()
 
-router.get('/search/:title',validateCollectionTitle(titleCollectionSchema), getCollectionsByTitle)
+
 
 router.use(authenticateToken)
 router.get('/mine', getMineCollections)
 router.get('/:id', validateParams(idCollectionSchema), getCollectionById)
-
+router.get('/search/:title',validateCollectionTitle(titleCollectionSchema), getCollectionsByTitle)
 router.post('/', validateBody(createCollectionSchema), createCollection)
-router.patch('/:id',validateBody(updateCollectionSchema), updateCollection)
+router.put('/:id',validateBody(updateCollectionSchema), updateCollection)
 router.delete('/:id', validateParams(idCollectionSchema),deleteCollection)
 
 
