@@ -29,7 +29,7 @@ Pré-requis: Node.js LTS installé.
 
 1) Cloner le dépôt et installer les dépendances:
 ```powershell
-git clone <url-du-depot>
+git clone https://github.com/leldrum/flashCard.git
 cd flashCard
 npm install
 ```
